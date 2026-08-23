@@ -1,1 +1,3 @@
 ste100
+cordis-witness-provider
+cordis-witness-consumer
