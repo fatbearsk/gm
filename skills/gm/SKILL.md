@@ -55,11 +55,26 @@ is a respawn, not a stuck loop.
 The verb set belongs to the running build, not this file. An unrecognized verb is
 silently queued with no response, so a missing out-file after a normal read cycle
 means unavailable: fall back, never retry blindly. Where served: `codesearch`
-(never Grep/Glob), `serp`/`browser`/`cdp` (never raw Chrome/playwright), git verbs (never raw
+(never Grep/Glob/Explore/Bash `find`/`grep`/`rg`, on any target -- cwd or an
+external root), `serp`/`browser`/`cdp` (never raw Chrome/playwright), git verbs (never raw
 `git` via Bash, gated `deviation.bash-git-bypass`), `recall`, `fetch`, `exec_js`,
 `memorize-fire`, `prd-add`/`prd-resolve`/`mutable-add`/`mutable-resolve`,
 `transition`, `phase-status`, `filter`. `git_finalize {message}` bundles
 add->commit->porcelain-gate->push->CI-watch; where absent, compose it.
+
+**The one exception: runtime-state files.** Spool response JSON
+(`.gm/exec-spool/out/*.json`), `.status.json`, `.turn-summary.json`, and this
+session's own tool-output files are `Read` directly -- they are a known exact
+path, not a search target, so there is nothing for `codesearch` to index or
+rank. `Glob`/`Grep`/Bash `find`/`grep`/`rg` stay off-limits even here if the
+question is "which files/how many are queued" rather than "read this one known
+path" -- `Glob` on an exact spool glob (`'.gm/exec-spool/in/**/*.txt'`) is a
+narrow, sanctioned instance of the runtime-state exception, never a general
+Glob/Grep fallback for code or prose content. The reason `find`/`Glob`/`Grep`
+are blocked for content search is not stylistic: an agent invoking them can
+walk an entire filesystem uncached and unbounded on every call, where
+`codesearch` is a purpose-built, cached, incremental index -- the ban is a
+resource/blast-radius boundary, not a preference between equivalent tools.
 
 A `transition` response's `phase_label` field is internal bookkeeping, not a
 dispatch target -- it is never a real `Skill()` name and calling `Skill()` with
