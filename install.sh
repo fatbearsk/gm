@@ -78,28 +78,27 @@ fetch_json() {
   fi
 }
 
-# A published release's metadata can exist while its asset upload for THIS
-# platform never landed (a build-matrix leg failed, or -- before release.yml's
-# own all-platforms verification -- silently skipped). "Latest" is worthless
-# if it 404s; walk backward through real recent releases until one actually
-# carries the needed asset.
+extract_tag_owning_asset_from_releases_json() {
+  releases_json="$1"
+  asset_name="$2"
+  printf '%s' "$releases_json" | tr ',' '\n' | awk -v needle="\"name\": \"${asset_name}\"" '
+    /"tag_name"/ { line = $0; sub(/^[^:]*: *"/, "", line); sub(/".*$/, "", line); current_tag = line }
+    index($0, needle) > 0 { print current_tag; exit }
+  '
+}
+
 resolve_installable_tag() {
   asset_name="$1"
   releases_json=$(fetch_json "https://api.github.com/repos/${REPO}/releases?per_page=10")
   if [ -n "$releases_json" ]; then
-    # Portable (non-gawk) scan: the GitHub releases-list JSON lists each
-    # release's own "tag_name" once, followed later by that release's
-    # "assets" array -- track the most recent tag_name seen and, on hitting
-    # this exact asset's "name" line, that tracked tag is the answer.
-    tag=$(printf '%s' "$releases_json" | tr ',' '\n' | awk -v needle="\"name\": \"${asset_name}\"" '
-      /"tag_name"/ { line = $0; sub(/^[^:]*: *"/, "", line); sub(/".*$/, "", line); current_tag = line }
-      index($0, needle) > 0 { print current_tag; exit }
-    ')
+    tag=$(extract_tag_owning_asset_from_releases_json "$releases_json" "$asset_name")
     if [ -n "${tag:-}" ]; then
       echo "$tag"
       return 0
     fi
-    log "no release in the 10 most recent carries a ${asset_name} asset -- falling back to git ls-remote"
+    log "no release in the 10 most recent carries a ${asset_name} asset -- falling back to git ls-remote (asset-unverified)"
+  else
+    log "GitHub API release lookup failed -- falling back to git ls-remote (asset-unverified)"
   fi
   if command -v git >/dev/null 2>&1; then
     tag=$(git ls-remote --tags --refs "https://github.com/${REPO}.git" 2>/dev/null \

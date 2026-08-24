@@ -25,11 +25,6 @@ function Get-GitHubAuthHeaders {
 
 function Resolve-InstallableTag {
     param([string]$AssetName)
-    # A published release's metadata can exist while its asset upload for
-    # THIS platform never landed (a build-matrix leg failed, or -- before
-    # release.yml's own all-platforms verification -- silently skipped).
-    # "Latest" is worthless if it 404s; walk backward through real recent
-    # releases until one actually carries the needed asset.
     try {
         $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases?per_page=10" -Headers (Get-GitHubAuthHeaders) -UseBasicParsing -TimeoutSec 15
         foreach ($release in $releases) {
@@ -38,8 +33,9 @@ function Resolve-InstallableTag {
             if ($hasAsset) { return $release.tag_name }
             Write-Warning "release $($release.tag_name) has no $AssetName asset -- trying the next older release"
         }
+        Write-Warning "no release in the 10 most recent carries a $AssetName asset -- falling back to git ls-remote (asset-unverified)"
     } catch {
-        Write-Warning "GitHub API release lookup failed: $($_.Exception.Message) -- falling back to git ls-remote"
+        Write-Warning "GitHub API release lookup failed: $($_.Exception.Message) -- falling back to git ls-remote (asset-unverified)"
     }
     try {
         $refs = git ls-remote --tags --refs "https://github.com/$Repo.git" 2>$null
