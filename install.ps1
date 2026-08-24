@@ -23,12 +23,23 @@ function Get-GitHubAuthHeaders {
     return @{}
 }
 
-function Resolve-LatestTag {
+function Resolve-InstallableTag {
+    param([string]$AssetName)
+    # A published release's metadata can exist while its asset upload for
+    # THIS platform never landed (a build-matrix leg failed, or -- before
+    # release.yml's own all-platforms verification -- silently skipped).
+    # "Latest" is worthless if it 404s; walk backward through real recent
+    # releases until one actually carries the needed asset.
     try {
-        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers (Get-GitHubAuthHeaders) -UseBasicParsing -TimeoutSec 15
-        if ($release.tag_name) { return $release.tag_name }
+        $releases = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases?per_page=10" -Headers (Get-GitHubAuthHeaders) -UseBasicParsing -TimeoutSec 15
+        foreach ($release in $releases) {
+            if (-not $release.tag_name) { continue }
+            $hasAsset = $release.assets | Where-Object { $_.name -eq $AssetName }
+            if ($hasAsset) { return $release.tag_name }
+            Write-Warning "release $($release.tag_name) has no $AssetName asset -- trying the next older release"
+        }
     } catch {
-        Write-Warning "GitHub API tag lookup failed: $($_.Exception.Message) -- falling back to git ls-remote"
+        Write-Warning "GitHub API release lookup failed: $($_.Exception.Message) -- falling back to git ls-remote"
     }
     try {
         $refs = git ls-remote --tags --refs "https://github.com/$Repo.git" 2>$null
@@ -110,12 +121,12 @@ function Main {
         exit 1
     }
 
-    $tag = Resolve-LatestTag
+    $tag = Resolve-InstallableTag -AssetName $asset
     if (-not $tag) {
-        Write-Error "FATAL: could not resolve latest release tag for $Repo"
+        Write-Error "FATAL: no release of $Repo (checked the 10 most recent) carries a $asset asset"
         exit 1
     }
-    Write-Host "agentplug-runner: resolved latest release $tag"
+    Write-Host "agentplug-runner: resolved installable release $tag"
 
     New-Item -ItemType Directory -Force -Path $GmToolsDir | Out-Null
     $base = "https://github.com/$Repo/releases/download/$tag"

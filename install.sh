@@ -57,25 +57,51 @@ github_token() {
   fi
 }
 
-resolve_latest_tag() {
+fetch_json() {
+  url="$1"
   token=$(github_token)
   if command -v curl >/dev/null 2>&1; then
     if [ -n "$token" ]; then
-      tag=$(curl -fsSL -H "Authorization: Bearer $token" "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep -o '"tag_name" *: *"[^"]*"' | head -1 | sed -E 's/.*"([^"]+)"$/\1/')
+      curl -fsSL -H "Authorization: Bearer $token" "$url" 2>/dev/null
     else
-      tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep -o '"tag_name" *: *"[^"]*"' | head -1 | sed -E 's/.*"([^"]+)"$/\1/')
+      curl -fsSL "$url" 2>/dev/null
     fi
   elif command -v wget >/dev/null 2>&1; then
     if [ -n "$token" ]; then
-      tag=$(wget -qO- --header="Authorization: Bearer $token" "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep -o '"tag_name" *: *"[^"]*"' | head -1 | sed -E 's/.*"([^"]+)"$/\1/')
+      wget -qO- --header="Authorization: Bearer $token" "$url" 2>/dev/null
     else
-      tag=$(wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep -o '"tag_name" *: *"[^"]*"' | head -1 | sed -E 's/.*"([^"]+)"$/\1/')
+      wget -qO- "$url" 2>/dev/null
     fi
   else
     log "FATAL: neither curl nor wget is available"
     exit 1
   fi
-  if [ -z "${tag:-}" ] && command -v git >/dev/null 2>&1; then
+}
+
+# A published release's metadata can exist while its asset upload for THIS
+# platform never landed (a build-matrix leg failed, or -- before release.yml's
+# own all-platforms verification -- silently skipped). "Latest" is worthless
+# if it 404s; walk backward through real recent releases until one actually
+# carries the needed asset.
+resolve_installable_tag() {
+  asset_name="$1"
+  releases_json=$(fetch_json "https://api.github.com/repos/${REPO}/releases?per_page=10")
+  if [ -n "$releases_json" ]; then
+    # Portable (non-gawk) scan: the GitHub releases-list JSON lists each
+    # release's own "tag_name" once, followed later by that release's
+    # "assets" array -- track the most recent tag_name seen and, on hitting
+    # this exact asset's "name" line, that tracked tag is the answer.
+    tag=$(printf '%s' "$releases_json" | tr ',' '\n' | awk -v needle="\"name\": \"${asset_name}\"" '
+      /"tag_name"/ { line = $0; sub(/^[^:]*: *"/, "", line); sub(/".*$/, "", line); current_tag = line }
+      index($0, needle) > 0 { print current_tag; exit }
+    ')
+    if [ -n "${tag:-}" ]; then
+      echo "$tag"
+      return 0
+    fi
+    log "no release in the 10 most recent carries a ${asset_name} asset -- falling back to git ls-remote"
+  fi
+  if command -v git >/dev/null 2>&1; then
     tag=$(git ls-remote --tags --refs "https://github.com/${REPO}.git" 2>/dev/null \
       | sed -n 's#.*refs/tags/##p' \
       | sort -t. -k1,1n -k2,2n -k3,3n \
@@ -157,12 +183,12 @@ main() {
     exit 1
   fi
 
-  tag=$(resolve_latest_tag)
+  tag=$(resolve_installable_tag "$asset")
   if [ -z "$tag" ]; then
-    log "FATAL: could not resolve latest release tag for ${REPO}"
+    log "FATAL: no release of ${REPO} (checked the 10 most recent) carries a ${asset} asset"
     exit 1
   fi
-  log "agentplug-runner: resolved latest release ${tag}"
+  log "agentplug-runner: resolved installable release ${tag}"
 
   mkdir -p "$GM_TOOLS_DIR"
   base="https://github.com/${REPO}/releases/download/${tag}"
