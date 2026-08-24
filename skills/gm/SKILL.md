@@ -6,6 +6,10 @@ allowed-tools: Skill, Read, Write, Bash(bun *), Bash(npx *), Bash(cat *), Bash(d
 
 # gm
 
+**Brick wall: `codesearch` replaces Grep/Glob/Explore/Bash `find`/`grep`/`rg`
+everywhere, no exceptions. `fetch`/`browser`/`cdp` replace WebFetch/WebSearch/
+raw Chrome. Every `Agent`/`Task` dispatch opens with "use the gm skill for this."**
+
 This is a well understood, long-horizon task.
 Instead of questioning the user, record them as mutables, and use exhaustive research to reach
 the most obvious conclusions, if observability needs to be increased immediately roll out more
@@ -54,10 +58,9 @@ is a respawn, not a stuck loop.
 
 The verb set belongs to the running build, not this file. An unrecognized verb is
 silently queued with no response, so a missing out-file after a normal read cycle
-means unavailable: fall back, never retry blindly. Where served: `codesearch`
-(never Grep/Glob/Explore/Bash `find`/`grep`/`rg`, on any target -- cwd or an
-external root), `serp`/`browser`/`cdp` (never raw Chrome/playwright), git verbs (never raw
-`git` via Bash, gated `deviation.bash-git-bypass`), `recall`, `fetch`, `exec_js`,
+means unavailable: fall back, never retry blindly. Where served (per the brick
+wall above): `codesearch`, `serp`/`browser`/`cdp`, git verbs (never raw `git`
+via Bash, gated `deviation.bash-git-bypass`), `recall`, `fetch`, `exec_js`,
 `memorize-fire`, `prd-add`/`prd-resolve`/`mutable-add`/`mutable-resolve`,
 `transition`, `phase-status`, `filter`. `git_finalize {message}` bundles
 add->commit->porcelain-gate->push->CI-watch; where absent, compose it.
@@ -127,16 +130,12 @@ on and maximize the solution-bearing output of your calls. Orient this processin
 around optimizing the wall clock time you need to perform the exhaustive troubleshooting
 you also need
 
-Fan out multi agent tasks and tell them to use gm too. Optimize the time they spend
-by instructing them and parallelizing them accordingly so that we can get all the
-work done as efficiently as we can achieve.
-
 Every `Agent`/`Task` dispatch, with no exception, opens its prompt with an
-instruction to use the `/gm` skill for the work. A fresh subagent inherits none
-of this file's prose and defaults to its own native Grep/Glob/find/raw-git tools
-with no discouragement -- the "use gm" line is the only thing that binds it to
-`codesearch` instead. Omitting it is not a shorter prompt, it is a silent revert
-to ungoverned tool use for that whole subagent's execution.
+instruction to use the `/gm` skill for the work (see the brick wall above) --
+a fresh subagent inherits none of this file's prose and defaults to its own
+native Grep/Glob/find/raw-git tools with no discouragement otherwise. Full
+fan-out discipline (SESSION_ID minting, when to fan out vs stay single-session):
+served `instruction` prose, "Subagent fan-out" section.
 
 ## 1a. Supply-chain scan (every project, every session touching dependencies)
 
