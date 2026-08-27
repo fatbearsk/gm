@@ -47,3 +47,6 @@
 	path = agentplug-crux
 	url = https://github.com/AnEntrypoint/agentplug-crux.git
 	branch = main
+[submodule "gm-mcp"]
+	path = gm-mcp
+	url = https://github.com/AnEntrypoint/gm-mcp.git
