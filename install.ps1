@@ -128,7 +128,7 @@ function Main {
     $base = "https://github.com/$Repo/releases/download/$tag"
     $dest = Join-Path $GmToolsDir "agentplug-runner.exe"
     $tmp = "$dest.tmp.$PID"
-    $shaFile = "$tmp.sha256"
+    $shaFile = "$dest.sha256.tmp.$PID"
 
     Write-Host "downloading $base/$asset"
     Invoke-WebRequest -Uri "$base/$asset" -OutFile $tmp -UseBasicParsing

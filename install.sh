@@ -196,7 +196,7 @@ main() {
     *) dest="${GM_TOOLS_DIR}/agentplug-runner" ;;
   esac
   tmp="${dest}.tmp.$$"
-  shafile="${tmp}.sha256"
+  shafile="${dest}.sha256.tmp.$$"
 
   log "downloading ${base}/${asset}"
   fetch "${base}/${asset}" "$tmp"
@@ -211,7 +211,15 @@ main() {
   fi
   rm -f "$shafile"
   chmod 755 "$tmp"
-  mv -f "$tmp" "$dest"
+  if ! mv -f "$tmp" "$dest" 2>/dev/null; then
+    staged="${dest}.new"
+    mv -f "$tmp" "$staged"
+    log "agentplug-runner is currently running and locked; staged update at ${staged}"
+    if [ ! -f "$dest" ]; then
+      log "FATAL: no existing agentplug-runner at ${dest} to fall back to"
+      exit 1
+    fi
+  fi
   printf '%s' "$tag" > "${GM_TOOLS_DIR}/agentplug-runner.version"
   log "installed agentplug-runner ${tag} -> ${dest}"
 
