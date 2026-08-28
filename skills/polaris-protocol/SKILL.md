@@ -1,8 +1,8 @@
 ---
 name: polaris-protocol
-description: WFGY 5.0 Polaris Protocol -- the active flagship route from onestardao/WFGY. A two-layer reasoning system that compiles goals before execution and shoots complex problems into inspectable routes, with drift control throughout. This skill is the tree root: load it first, then dispatch its child skills as explicit transitions -- polaris-goal-compiler (compile), fifth-dimension-engine (shoot), wfgy-method (drift control). Use for any complex, multi-step, high-stakes, or long-horizon task where premature completion or goal drift is a risk.
+description: "WFGY 5.0 Polaris Protocol -- the active flagship route from onestardao/WFGY. A two-layer reasoning system that compiles goals before execution and shoots complex problems into inspectable routes, with drift control throughout. This skill is the tree root: load it first, then dispatch its child skills as explicit transitions -- polaris-goal-compiler (compile), fifth-dimension-engine (shoot), wfgy-method (drift control). Use for any complex, multi-step, high-stakes, or long-horizon task where premature completion or goal drift is a risk."
 license: MIT
-compatibility: Portable protocol; upstream released the Goal Compiler ChatGPT-first (teaser) and the Fifth-Dimension Engine as the main product surface. This skill wraps both plus WFGY-Method drift control into one discoverable entry point for any assistant or agent that loads skills.
+compatibility: "Portable protocol; upstream released the Goal Compiler ChatGPT-first (teaser) and the Fifth-Dimension Engine as the main product surface. This skill wraps both plus WFGY-Method drift control into one discoverable entry point for any assistant or agent that loads skills."
 metadata:
   origin: onestardao-wfgy-5.0-polaris-protocol
   provenance: adapted-and-honest-reimplementation-not-verbatim
