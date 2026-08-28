@@ -35,6 +35,11 @@ Section 4's world-scope is the sole exception.
 
 ## 1. Harness
 
+Prefer an already-connected `gm`/`mcp_tool` server over raw spool writes when
+one is available this turn; it wraps the same write-then-poll cycle into one
+call with cleaned output. Fall back to the raw protocol below otherwise --
+never spend a turn connecting one before dispatching real work.
+
 Verbs write `.gm/exec-spool/in/<verb>/<N>.txt` as JSON; read
 `.gm/exec-spool/out/<verb>-<N>.json` in the SAME tool-call block, never narrate
 first. `<N>` MUST be `<session_id>-<N>`, never a bare integer: the daemon keys
