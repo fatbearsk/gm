@@ -4,6 +4,7 @@
   "description": "Canonical universal harness — AI-native software engineering via skill-driven orchestration; bootstraps plugkit for task execution and session isolation. Install in any AI coding agent host.",
   "author": "AnEntrypoint",
   "license": "MIT",
+  "type": "module",
   "keywords": [
     "gm",
     "skill",
@@ -14,6 +15,9 @@
     "canonical"
   ],
   "homepage": "https://github.com/AnEntrypoint/gm#readme",
+  "bin": {
+    "gm": "bin/gm-install.js"
+  },
   "bugs": {
     "url": "https://github.com/AnEntrypoint/gm/issues"
   },
@@ -24,6 +28,7 @@
   "files": [
     "skills/",
     "scripts/",
+    "bin/gm-install.js",
     "install.sh",
     "install.ps1",
     "bin/plugkit.sha256",
