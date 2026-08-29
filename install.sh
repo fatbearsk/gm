@@ -212,12 +212,16 @@ main() {
   rm -f "$shafile"
   chmod 755 "$tmp"
   if ! mv -f "$tmp" "$dest" 2>/dev/null; then
-    staged="${dest}.new"
-    mv -f "$tmp" "$staged"
-    log "agentplug-runner is currently running and locked; staged update at ${staged}"
-    if [ ! -f "$dest" ]; then
-      log "FATAL: no existing agentplug-runner at ${dest} to fall back to"
-      exit 1
+    if rm -f "$dest" 2>/dev/null && mv -f "$tmp" "$dest" 2>/dev/null; then
+      : # unlinked running binary and placed new binary at dest
+    else
+      staged="${dest}.new"
+      mv -f "$tmp" "$staged"
+      log "agentplug-runner is currently running and locked; staged update at ${staged}"
+      if [ ! -f "$dest" ]; then
+        log "FATAL: no existing agentplug-runner at ${dest} to fall back to"
+        exit 1
+      fi
     fi
   fi
   printf '%s' "$tag" > "${GM_TOOLS_DIR}/agentplug-runner.version"
