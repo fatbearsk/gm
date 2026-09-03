@@ -43,10 +43,11 @@ detect_asset() {
 }
 
 sha256_file() {
+  checksum_path="$1"
   if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$1" | awk '{print $1}'
+    sha256sum "$checksum_path" | awk '{print $1}'
   elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 "$1" | awk '{print $1}'
+    shasum -a 256 "$checksum_path" | awk '{print $1}'
   else
     log "FATAL: no sha256sum or shasum available to verify the download"
     exit 1
