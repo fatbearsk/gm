@@ -43,11 +43,10 @@ detect_asset() {
 }
 
 sha256_file() {
-  checksum_path="$1"
   if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$checksum_path" | awk '{print $1}'
+    sha256sum "$1" | awk '{print $1}'
   elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 "$checksum_path" | awk '{print $1}'
+    shasum -a 256 "$1" | awk '{print $1}'
   else
     log "FATAL: no sha256sum or shasum available to verify the download"
     exit 1
@@ -115,12 +114,10 @@ resolve_installable_tag() {
 }
 
 fetch() {
-  url="$1"
-  dest="$2"
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$url" -o "$dest"
+    curl -fsSL "$1" -o "$2"
   else
-    wget -qO "$dest" "$url"
+    wget -qO "$2" "$1"
   fi
 }
 
@@ -212,11 +209,15 @@ main() {
   shafile="${dest}.sha256.tmp.$$"
 
   log "downloading ${base}/${asset}"
-  fetch "${base}/${asset}" "$tmp"
-  fetch "${base}/${asset}.sha256" "$shafile"
+  runner_tmp="$tmp"
+  runner_shafile="$shafile"
+  fetch "${base}/${asset}" "$runner_tmp"
+  fetch "${base}/${asset}.sha256" "$runner_shafile"
 
-  expected=$(awk '{print $1}' "$shafile")
-  actual=$(sha256_file "$tmp")
+  expected=$(awk '{print $1}' "$runner_shafile")
+  actual=$(sha256_file "$runner_tmp")
+  tmp="$runner_tmp"
+  shafile="$runner_shafile"
   if [ -z "$expected" ] || [ "$(echo "$actual" | tr 'A-F' 'a-f')" != "$(echo "$expected" | tr 'A-F' 'a-f')" ]; then
     log "FATAL: sha256 mismatch for ${asset} (expected ${expected}, got ${actual})"
     rm -f "$tmp" "$shafile"
