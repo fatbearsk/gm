@@ -216,6 +216,7 @@ main() {
 
   expected=$(awk '{print $1}' "$runner_shafile")
   actual=$(sha256_file "$runner_tmp")
+  dest="${GM_TOOLS_DIR}/agentplug-runner"
   tmp="$runner_tmp"
   shafile="$runner_shafile"
   if [ -z "$expected" ] || [ "$(echo "$actual" | tr 'A-F' 'a-f')" != "$(echo "$expected" | tr 'A-F' 'a-f')" ]; then
