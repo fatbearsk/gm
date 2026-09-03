@@ -114,10 +114,12 @@ resolve_installable_tag() {
 }
 
 fetch() {
+  download_url="$1"
+  download_dest="$2"
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL "$1" -o "$2"
+    curl -fsSL "$download_url" -o "$download_dest"
   else
-    wget -qO "$2" "$1"
+    wget -qO "$download_dest" "$download_url"
   fi
 }
 
@@ -207,6 +209,9 @@ main() {
     shafile="${dest}.sha256.tmp.$$"
     fetch "${base}/${asset}" "$tmp"
     fetch "${base}/${asset}.sha256" "$shafile"
+    dest="${GM_TOOLS_DIR}/agentplug-runner"
+    tmp="${dest}.tmp.$$"
+    shafile="${dest}.sha256.tmp.$$"
     expected=$(cut -d ' ' -f 1 "$shafile")
     actual=$(sha256_file "$tmp")
     if [ -z "$expected" ] || [ "$(echo "$actual" | tr 'A-F' 'a-f')" != "$(echo "$expected" | tr 'A-F' 'a-f')" ]; then
