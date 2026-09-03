@@ -44,9 +44,9 @@ detect_asset() {
 
 sha256_file() {
   if command -v sha256sum >/dev/null 2>&1; then
-    sha256sum "$1" | awk '{print $1}'
+    sha256sum "$1" | cut -d ' ' -f 1
   elif command -v shasum >/dev/null 2>&1; then
-    shasum -a 256 "$1" | awk '{print $1}'
+    shasum -a 256 "$1" | cut -d ' ' -f 1
   else
     log "FATAL: no sha256sum or shasum available to verify the download"
     exit 1
@@ -212,7 +212,7 @@ main() {
   fetch "${base}/${asset}" "$runner_tmp"
   fetch "${base}/${asset}.sha256" "$runner_shafile"
 
-  expected=$(awk '{print $1}' "$runner_shafile")
+  expected=$(cut -d ' ' -f 1 "$runner_shafile")
   actual=$(sha256_file "$runner_tmp")
   case "$asset" in
     *.exe) dest="${GM_TOOLS_DIR}/agentplug-runner.exe" ;;
