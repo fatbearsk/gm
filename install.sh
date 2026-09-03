@@ -214,9 +214,12 @@ main() {
 
   expected=$(awk '{print $1}' "$runner_shafile")
   actual=$(sha256_file "$runner_tmp")
-  dest="$runner_dest"
-  tmp="$runner_tmp"
-  shafile="$runner_shafile"
+  case "$asset" in
+    *.exe) dest="${GM_TOOLS_DIR}/agentplug-runner.exe" ;;
+    *) dest="${GM_TOOLS_DIR}/agentplug-runner" ;;
+  esac
+  tmp="${dest}.tmp.$$"
+  shafile="${dest}.sha256.tmp.$$"
   if [ -z "$expected" ] || [ "$(echo "$actual" | tr 'A-F' 'a-f')" != "$(echo "$expected" | tr 'A-F' 'a-f')" ]; then
     log "FATAL: sha256 mismatch for ${asset} (expected ${expected}, got ${actual})"
     rm -f "$tmp" "$shafile"
