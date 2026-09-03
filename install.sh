@@ -201,6 +201,26 @@ main() {
   log "agentplug-runner: resolved installable build ${tag}"
 
   mkdir -p "$GM_TOOLS_DIR"
+  if is_v0 && [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ]; then
+    dest="${GM_TOOLS_DIR}/agentplug-runner"
+    tmp="${dest}.tmp.$$"
+    shafile="${dest}.sha256.tmp.$$"
+    fetch "${base}/${asset}" "$tmp"
+    fetch "${base}/${asset}.sha256" "$shafile"
+    expected=$(cut -d ' ' -f 1 "$shafile")
+    actual=$(sha256_file "$tmp")
+    if [ -z "$expected" ] || [ "$(echo "$actual" | tr 'A-F' 'a-f')" != "$(echo "$expected" | tr 'A-F' 'a-f')" ]; then
+      log "FATAL: sha256 mismatch for ${asset} (expected ${expected}, got ${actual})"
+      rm -f "$tmp" "$shafile"
+      exit 1
+    fi
+    rm -f "$shafile"
+    chmod 755 "$tmp"
+    mv -f "$tmp" "$dest"
+    printf '%s' "$tag" > "${GM_TOOLS_DIR}/agentplug-runner.version"
+    log "installed agentplug-runner ${tag} -> ${dest}"
+    exec "$dest" "$@"
+  fi
   case "$asset" in
     *.exe) runner_dest="${GM_TOOLS_DIR}/agentplug-runner.exe" ;;
     *) runner_dest="${GM_TOOLS_DIR}/agentplug-runner" ;;
