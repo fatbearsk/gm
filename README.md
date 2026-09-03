@@ -63,6 +63,16 @@ Both scripts resolve the latest tagged release under [AnEntrypoint/gm releases](
 
 Inside a project that uses gm, the same two scripts run again without the `install` argument, for example `curl -fsSL .../install.sh | sh -s -- spool`. In this mode, each script resolves, checks, and runs the `agentplug-runner` binary (the native spool host) from `AnEntrypoint/agentplug-bin` releases. This step replaces the old `bun x gm-plugkit@latest spool` command. gm no longer uses a separate JS (JavaScript, a source-file language this repository tracks) launcher.
 
+### v0
+
+The fork at `fatbearsk/gm` detects the v0 sandbox and downloads the statically linked runner from its rolling `v0-runner` release. This avoids the glibc 2.38/2.39 dependency of the normal Linux release on v0's glibc 2.34 image:
+
+```
+curl -fsSL https://raw.githubusercontent.com/fatbearsk/gm/main/install.sh | sh -s -- spool
+```
+
+The fork's `gm` skill also maps unavailable spool capabilities to v0-native tools rather than stopping the task.
+
 An alternative one-line install adds the `/gm` skill and the `gm` MCP tool (the `gm-mcp` server, exposing gm's spool dispatch as one MCP tool call) to every detected agent host on your machine, the same way `npx skills add` and `npx add-mcp` already work for other tools:
 
 ```

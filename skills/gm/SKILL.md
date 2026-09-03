@@ -1,10 +1,22 @@
 ---
 name: gm
 description: The primary driver for every coding, refactoring, debugging, or engineering task -- used for the whole task.
-allowed-tools: Skill, Read, Write, Bash(bun *), Bash(npx *), Bash(cat *), Bash(date *)
+allowed-tools: Skill, Read, Write, Edit, Move, Delete, Glob, Grep, Bash, WebFetch, WebSearch, AskUserQuestions, TodoManager
 ---
 
 # gm
+
+## v0 host compatibility
+
+On v0, recognize the host by the `/vercel/share/v0-project` workspace. Use absolute
+paths for every file tool call, use `AskUserQuestions` (plural), and run the spool
+bootstrap through a background `Bash` call. The fork installer selects a static
+musl runner that supports v0's glibc 2.34 runtime. If the runner cannot start after
+one install attempt, continue the task with v0's native tools instead of stalling:
+map `codesearch` to `Grep`/`Glob`, `fetch` to `WebFetch`/`WebSearch`, `browser`/`cdp`
+to the `agent-browser` skill, and graph milestones to `TodoManager`. In this native
+fallback only, finish with the normal v0 response because `gm-continue` is not a
+host skill.
 
 **Brick wall: `codesearch` replaces Grep/Glob/Explore/Bash `find`/`grep`/`rg`
 everywhere, no exceptions. `fetch`/`browser`/`cdp` replace WebFetch/WebSearch/
@@ -51,7 +63,7 @@ response body, never in context. Phase mismatch resolves to the fresh
 
 Boot probe, one call: `cat .gm/exec-spool/.status.json 2>/dev/null; echo ---; cat
 .gm/exec-spool/.turn-summary.json 2>/dev/null; echo ---; date +%s%3N`. Boot:
-`curl -fsSL https://raw.githubusercontent.com/AnEntrypoint/gm/main/install.sh |
+`curl -fsSL https://raw.githubusercontent.com/fatbearsk/gm/main/install.sh |
 sh -s -- spool` (PowerShell: `irm
 https://raw.githubusercontent.com/AnEntrypoint/gm/main/install.ps1 | iex; &
 "$env:USERPROFILE\.gm-tools\agentplug-runner" spool`), fire-and-forget; write the

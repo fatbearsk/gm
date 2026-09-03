@@ -1,12 +1,17 @@
 #!/bin/sh
 set -eu
 
-REPO="AnEntrypoint/agentplug-bin"
-GM_REPO="AnEntrypoint/gm"
+REPO="${GM_RUNNER_REPO:-AnEntrypoint/agentplug-bin}"
+GM_REPO="${GM_REPO:-fatbearsk/gm}"
+V0_RUNNER_TAG="${GM_V0_RUNNER_TAG:-v0-runner}"
 GM_TOOLS_DIR="${HOME}/.gm-tools"
 CLAUDE_SKILLS_DIR="${HOME}/.claude/skills"
 
 log() { printf '%s\n' "$*" >&2; }
+
+is_v0() {
+  [ -n "${VERCEL_SANDBOX_ID:-}" ] || [ -d "/vercel/share/v0-project" ]
+}
 
 detect_asset() {
   plat=$(uname -s)
@@ -182,15 +187,22 @@ main() {
     exit 1
   fi
 
-  tag=$(resolve_installable_tag "$asset")
+  runner_repo="$REPO"
+  if is_v0 && [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ]; then
+    runner_repo="$GM_REPO"
+    tag="$V0_RUNNER_TAG"
+    log "agentplug-runner: v0 detected; selecting static ${tag} build"
+  else
+    tag=$(resolve_installable_tag "$asset")
+  fi
   if [ -z "$tag" ]; then
-    log "FATAL: no release of ${REPO} (checked the 10 most recent) carries a ${asset} asset"
+    log "FATAL: no release of ${runner_repo} carries a ${asset} asset"
     exit 1
   fi
   log "agentplug-runner: resolved installable release ${tag}"
 
   mkdir -p "$GM_TOOLS_DIR"
-  base="https://github.com/${REPO}/releases/download/${tag}"
+  base="https://github.com/${runner_repo}/releases/download/${tag}"
   case "$asset" in
     *.exe) dest="${GM_TOOLS_DIR}/agentplug-runner.exe" ;;
     *) dest="${GM_TOOLS_DIR}/agentplug-runner" ;;
