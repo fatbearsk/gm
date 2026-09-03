@@ -202,21 +202,19 @@ main() {
 
   mkdir -p "$GM_TOOLS_DIR"
   case "$asset" in
-    *.exe) dest="${GM_TOOLS_DIR}/agentplug-runner.exe" ;;
-    *) dest="${GM_TOOLS_DIR}/agentplug-runner" ;;
+    *.exe) runner_dest="${GM_TOOLS_DIR}/agentplug-runner.exe" ;;
+    *) runner_dest="${GM_TOOLS_DIR}/agentplug-runner" ;;
   esac
-  tmp="${dest}.tmp.$$"
-  shafile="${dest}.sha256.tmp.$$"
+  runner_tmp="${runner_dest}.tmp.$$"
+  runner_shafile="${runner_dest}.sha256.tmp.$$"
 
   log "downloading ${base}/${asset}"
-  runner_tmp="$tmp"
-  runner_shafile="$shafile"
   fetch "${base}/${asset}" "$runner_tmp"
   fetch "${base}/${asset}.sha256" "$runner_shafile"
 
   expected=$(awk '{print $1}' "$runner_shafile")
   actual=$(sha256_file "$runner_tmp")
-  dest="${GM_TOOLS_DIR}/agentplug-runner"
+  dest="$runner_dest"
   tmp="$runner_tmp"
   shafile="$runner_shafile"
   if [ -z "$expected" ] || [ "$(echo "$actual" | tr 'A-F' 'a-f')" != "$(echo "$expected" | tr 'A-F' 'a-f')" ]; then
