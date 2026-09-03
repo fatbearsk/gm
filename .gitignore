@@ -1,7 +1,9 @@
 .glootie-stop-verified
 .prd
 build/
-dist/
+dist/*
+!dist/agentplug-runner-linux-x64
+!dist/agentplug-runner-linux-x64.sha256
 final-build/
 gm-build/
 gm-build-latest/

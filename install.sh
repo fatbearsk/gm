@@ -3,7 +3,6 @@ set -eu
 
 REPO="${GM_RUNNER_REPO:-AnEntrypoint/agentplug-bin}"
 GM_REPO="${GM_REPO:-fatbearsk/gm}"
-V0_RUNNER_TAG="${GM_V0_RUNNER_TAG:-v0-runner}"
 GM_TOOLS_DIR="${HOME}/.gm-tools"
 CLAUDE_SKILLS_DIR="${HOME}/.claude/skills"
 
@@ -190,19 +189,20 @@ main() {
   runner_repo="$REPO"
   if is_v0 && [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ]; then
     runner_repo="$GM_REPO"
-    tag="$V0_RUNNER_TAG"
-    log "agentplug-runner: v0 detected; selecting static ${tag} build"
+    tag="bundled-main"
+    base="https://raw.githubusercontent.com/${runner_repo}/main/dist"
+    log "agentplug-runner: v0 detected; selecting bundled static build"
   else
     tag=$(resolve_installable_tag "$asset")
+    if [ -z "$tag" ]; then
+      log "FATAL: no release of ${runner_repo} carries a ${asset} asset"
+      exit 1
+    fi
+    base="https://github.com/${runner_repo}/releases/download/${tag}"
   fi
-  if [ -z "$tag" ]; then
-    log "FATAL: no release of ${runner_repo} carries a ${asset} asset"
-    exit 1
-  fi
-  log "agentplug-runner: resolved installable release ${tag}"
+  log "agentplug-runner: resolved installable build ${tag}"
 
   mkdir -p "$GM_TOOLS_DIR"
-  base="https://github.com/${runner_repo}/releases/download/${tag}"
   case "$asset" in
     *.exe) dest="${GM_TOOLS_DIR}/agentplug-runner.exe" ;;
     *) dest="${GM_TOOLS_DIR}/agentplug-runner" ;;

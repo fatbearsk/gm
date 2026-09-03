@@ -65,7 +65,7 @@ Inside a project that uses gm, the same two scripts run again without the `insta
 
 ### v0
 
-The fork at `fatbearsk/gm` detects the v0 sandbox and downloads the statically linked runner from its rolling `v0-runner` release. This avoids the glibc 2.38/2.39 dependency of the normal Linux release on v0's glibc 2.34 image:
+The fork at `fatbearsk/gm` detects the v0 sandbox and downloads the checked-in, statically linked runner from `dist/`. This avoids the glibc 2.38/2.39 dependency of the normal Linux release on v0's glibc 2.34 image:
 
 ```
 curl -fsSL https://raw.githubusercontent.com/fatbearsk/gm/main/install.sh | sh -s -- spool
